@@ -1,0 +1,41 @@
+<html>
+  <body>
+    <button onclick="notifyMe()">Notify me!</button>
+  </body>
+</html>
+<script>
+function setup() {
+  const ws = new WebSocket('wss://michielbdejong.dev.inrupt.net')
+  ws.onmessage = (msg) => {
+      console.log(msg.data)
+      var notification = new Notification(msg.data);
+    } 
+  ws.onopen =(event) => {
+    ws.send('sub https://michielbdejong.dev.inrupt.net/inbox/')
+  }
+}
+function notifyMe() {
+  // Let's check if the browser supports notifications
+  if (!("Notification" in window)) {
+    alert("This browser does not support desktop notification");
+  }
+
+  // Let's check whether notification permissions have already been granted
+  else if (Notification.permission === "granted") {
+    setup()
+  }
+
+  // Otherwise, we need to ask the user for permission
+  else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then(function (permission) {
+      // If the user accepts, let's create a notification
+      if (permission === "granted") {
+        setup()
+      }
+    });
+  }
+
+  // At last, if the user has denied notifications, and you 
+  // want to be respectful there is no need to bother them any more.
+}
+</script>
