@@ -1,4 +1,6 @@
 <html>
+  <head>
+  </head>
   <body>
     <label for="url">URL:</label><input id="url" size="100"><br>
     <label for="wss">WSS:</label><input id="wss" size="100"><br>
@@ -6,79 +8,79 @@
     <button onclick="notifyMe()">Notify me!</button>
     <ul id="list"></ul>
   </body>
-</html>
-<script>
-document.getElementById('url').onchange = () => {
-  console.log('changed!')
-  document.getElementById('wss').value = 'wss://' + new URL(document.getElementById('url').value).host
-}
-
-const KEY_PREFIX = 'resource='
-if (window.location.hash.length > 2) {
-  pairs = window.location.hash.substring(1).split('&')
-  pairs.map(pair => {
-    console.log(pair, pair.substring(0, KEY_PREFIX.length), KEY_PREFIX)
-    if (pair.substring(0, KEY_PREFIX.length) === KEY_PREFIX) {
-      console.log(pair.substring(KEY_PREFIX.length))
-      document.getElementById('url').value = pair.substring(KEY_PREFIX.length)
-      document.getElementById('url').onchange()
+  <script>
+    document.getElementById('url').onchange = () => {
+      console.log('changed!')
+      document.getElementById('wss').value = 'wss://' + new URL(document.getElementById('url').value).host
     }
-  })
-}
-
-function subscribe(url, wssUrl) {
-  setup(wssUrl).then(wssObj => {
-    const msg = 'sub ' + document.getElementById('url').value
-    console.log(msg)
-    wssObj.send(msg)
-  })
-}
-
-const setupDone = {}
-function setup(wssUrl) {
-  if (setupDone[wssUrl]) {
-    return Promise.resolve(setupDone[wssUrl])
-  }
-  return new Promise((resolve) => {
-    const wssObj = new WebSocket(wssUrl)
-    wssObj.onmessage = (msg) => {
-      console.log(msg.data)
-      if (msg.data.substring(0, 4) === 'ack ') {
-        document.getElementById('list').innerHTML += '<li>' + msg.data.substring(4) + '</li>'
-        var notification = new Notification('subscribed to ' + msg.data.substring(4));
-      } else {
-        var notification = new Notification(msg.data.substring(4) + ' changed');
+    
+    const KEY_PREFIX = 'resource='
+    if (window.location.hash.length > 2) {
+      pairs = window.location.hash.substring(1).split('&')
+      pairs.map(pair => {
+        console.log(pair, pair.substring(0, KEY_PREFIX.length), KEY_PREFIX)
+        if (pair.substring(0, KEY_PREFIX.length) === KEY_PREFIX) {
+          console.log(pair.substring(KEY_PREFIX.length))
+          document.getElementById('url').value = pair.substring(KEY_PREFIX.length)
+          document.getElementById('url').onchange()
+        }
+      })
+    }
+    
+    function subscribe(url, wssUrl) {
+      setup(wssUrl).then(wssObj => {
+        const msg = 'sub ' + document.getElementById('url').value
+        console.log(msg)
+        wssObj.send(msg)
+      })
+    }
+    
+    const setupDone = {}
+    function setup(wssUrl) {
+      if (setupDone[wssUrl]) {
+        return Promise.resolve(setupDone[wssUrl])
       }
+      return new Promise((resolve) => {
+        const wssObj = new WebSocket(wssUrl)
+        wssObj.onmessage = (msg) => {
+          console.log(msg.data)
+          if (msg.data.substring(0, 4) === 'ack ') {
+            document.getElementById('list').innerHTML += '<li>' + msg.data.substring(4) + '</li>'
+            var notification = new Notification('subscribed to ' + msg.data.substring(4));
+          } else {
+            var notification = new Notification(msg.data.substring(4) + ' changed');
+          }
+        }
+        wssObj.onopen = () => {
+          setupDone[wssUrl] = wssObj
+          resolve(wssObj)
+        }
+      })
     }
-    wssObj.onopen = () => {
-      setupDone[wssUrl] = wssObj
-      resolve(wssObj)
-    }
-  })
-}
-
-function notifyMe() {
-  // Let's check if the browser supports notifications
-  if (!("Notification" in window)) {
-    alert("This browser does not support desktop notification");
-  }
-
-  // Let's check whether notification permissions have already been granted
-  else if (Notification.permission === "granted") {
-    subscribe(document.getElementById('url').value, document.getElementById('wss').value)
-  }
-
-  // Otherwise, we need to ask the user for permission
-  else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then(function (permission) {
-      // If the user accepts, let's create a notification
-      if (permission === "granted") {
+    
+    function notifyMe() {
+      // Let's check if the browser supports notifications
+      if (!("Notification" in window)) {
+        alert("This browser does not support desktop notification");
+      }
+    
+      // Let's check whether notification permissions have already been granted
+      else if (Notification.permission === "granted") {
         subscribe(document.getElementById('url').value, document.getElementById('wss').value)
       }
-    });
-  }
-
-  // At last, if the user has denied notifications, and you 
-  // want to be respectful there is no need to bother them any more.
-}
-</script>
+    
+      // Otherwise, we need to ask the user for permission
+      else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(function (permission) {
+          // If the user accepts, let's create a notification
+          if (permission === "granted") {
+            subscribe(document.getElementById('url').value, document.getElementById('wss').value)
+          }
+        });
+      }
+    
+      // At last, if the user has denied notifications, and you 
+      // want to be respectful there is no need to bother them any more.
+    }
+  </script>
+</html>
