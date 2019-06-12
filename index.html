@@ -22,7 +22,7 @@
           document.getElementById('ui').style.display = 'none';
         } else {
           console.log(`Logged in as ${session.webId}`)
-          document.getElementById('url').value = new URL('https://michielbdejong.inrupt.net/profile/card#me').origin + '/inbox/';
+          document.getElementById('url').value = new URL(session.webId).origin + '/inbox/';
 
           document.getElementById('loginBanner').innerHTML = `Logged in as ${session.webId} <button onclick="solid.auth.logout()">Log out</button>`;
           document.getElementById('ui').style.display = 'block';
